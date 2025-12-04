@@ -29,7 +29,16 @@ param(
     [string]$ServicePrincipalId,
     
     [Parameter(Mandatory = $false)]
-    [securestring]$ServicePrincipalSecret
+    [securestring]$ServicePrincipalSecret,
+    
+    [Parameter(Mandatory = $false)]
+    [switch]$UseGitHubRelease,
+    
+    [Parameter(Mandatory = $false)]
+    [string]$GitHubRepo = "devnomadic/ACSC-WindowsHardening",
+    
+    [Parameter(Mandatory = $false)]
+    [string]$ReleaseVersion  # If not specified, uses latest release
 )
 
 # Import required modules
@@ -46,6 +55,100 @@ foreach ($Module in $RequiredModules) {
         Install-Module -Name $Module -Force -AllowClobber -Scope CurrentUser
     }
     Import-Module -Name $Module -Force
+}
+
+# Function to download GitHub release assets
+function Get-GitHubReleaseAssets {
+    param(
+        [string]$Repository,
+        [string]$Version  # If empty, gets latest
+    )
+    
+    Write-Host "`nDownloading packages from GitHub Release..." -ForegroundColor Cyan
+    
+    # Create temp directory for downloads
+    $TempDir = Join-Path $env:TEMP "ACSC-Release-$(Get-Random)"
+    New-Item -Path $TempDir -ItemType Directory -Force | Out-Null
+    
+    try {
+        # Get release information
+        if ($Version) {
+            $ReleaseUrl = "https://api.github.com/repos/$Repository/releases/tags/$Version"
+            Write-Host "Fetching release: $Version" -ForegroundColor Yellow
+        } else {
+            $ReleaseUrl = "https://api.github.com/repos/$Repository/releases/latest"
+            Write-Host "Fetching latest release..." -ForegroundColor Yellow
+        }
+        
+        $Release = Invoke-RestMethod -Uri $ReleaseUrl -Headers @{
+            "Accept" = "application/vnd.github+json"
+            "User-Agent" = "PowerShell-ACSC-Deploy"
+        }
+        
+        Write-Host "Found release: $($Release.tag_name) - $($Release.name)" -ForegroundColor Green
+        
+        # Download required assets
+        $RequiredAssets = @(
+            "ACSCHighPriorityHardening*.zip",
+            "ACSCMediumPriorityHardening*.zip",
+            "*.sha256",
+            "acsc-high-priority-policy.json",
+            "acsc-medium-priority-policy.json"
+        )
+        
+        $DownloadedFiles = @{}
+        
+        foreach ($Asset in $Release.assets) {
+            $ShouldDownload = $false
+            foreach ($Pattern in $RequiredAssets) {
+                if ($Asset.name -like $Pattern) {
+                    $ShouldDownload = $true
+                    break
+                }
+            }
+            
+            if ($ShouldDownload) {
+                Write-Host "Downloading: $($Asset.name)" -ForegroundColor Gray
+                $FilePath = Join-Path $TempDir $Asset.name
+                
+                Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $FilePath
+                
+                # Store file paths by type
+                if ($Asset.name -like "*HighPriority*.zip" -and $Asset.name -notlike "*.sha256") {
+                    $DownloadedFiles['HighPriorityPackage'] = $FilePath
+                }
+                elseif ($Asset.name -like "*HighPriority*.sha256") {
+                    $DownloadedFiles['HighPriorityHash'] = $FilePath
+                }
+                elseif ($Asset.name -like "*MediumPriority*.zip" -and $Asset.name -notlike "*.sha256") {
+                    $DownloadedFiles['MediumPriorityPackage'] = $FilePath
+                }
+                elseif ($Asset.name -like "*MediumPriority*.sha256") {
+                    $DownloadedFiles['MediumPriorityHash'] = $FilePath
+                }
+                elseif ($Asset.name -eq "acsc-high-priority-policy.json") {
+                    $DownloadedFiles['HighPriorityPolicy'] = $FilePath
+                }
+                elseif ($Asset.name -eq "acsc-medium-priority-policy.json") {
+                    $DownloadedFiles['MediumPriorityPolicy'] = $FilePath
+                }
+            }
+        }
+        
+        Write-Host "All assets downloaded to: $TempDir" -ForegroundColor Green
+        return @{
+            TempDir = $TempDir
+            Files = $DownloadedFiles
+            ReleaseInfo = $Release
+        }
+    }
+    catch {
+        Write-Error "Failed to download GitHub release: $($_.Exception.Message)"
+        if (Test-Path $TempDir) {
+            Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        throw
+    }
 }
 
 # Connect to Azure
@@ -460,37 +563,73 @@ function Deploy-ACSCConfiguration {
 # Deploy configurations based on level
 $DeploymentResults = @()
 
+# Download from GitHub if requested
+if ($UseGitHubRelease) {
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "Fetching Latest Release from GitHub" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    
+    try {
+        $GitHubDownload = Get-GitHubReleaseAssets -Repository $GitHubRepo -Version $ReleaseVersion
+        Write-Host "`nUsing release: $($GitHubDownload.ReleaseInfo.tag_name)" -ForegroundColor Green
+        Write-Host "Published: $($GitHubDownload.ReleaseInfo.published_at)" -ForegroundColor Gray
+        
+        # Set package and policy paths to downloaded files
+        $HighPriorityPackagePath = $GitHubDownload.Files['HighPriorityPackage']
+        $MediumPriorityPackagePath = $GitHubDownload.Files['MediumPriorityPackage']
+        $HighPriorityPolicyPath = $GitHubDownload.Files['HighPriorityPolicy']
+        $MediumPriorityPolicyPath = $GitHubDownload.Files['MediumPriorityPolicy']
+    }
+    catch {
+        Write-Error "Failed to download from GitHub: $($_.Exception.Message)"
+        exit 1
+    }
+}
+else {
+    # Use local files
+    $HighPriorityPackagePath = "./packages/ACSCHighPriorityHardening.zip"
+    $MediumPriorityPackagePath = "./packages/ACSCMediumPriorityHardening.zip"
+    $HighPriorityPolicyPath = "./policies/acsc-high-priority-policy.json"
+    $MediumPriorityPolicyPath = "./policies/acsc-medium-priority-policy.json"
+}
+
 switch ($ConfigurationLevel) {
     "HighPriority" {
         $Result = Deploy-ACSCConfiguration -ConfigurationName "ACSCHighPriorityHardening" `
-                                         -PackagePath "./packages/ACSCHighPriorityHardening.zip" `
-                                         -PolicyPath "./policies/acsc-high-priority-policy.json" `
+                                         -PackagePath $HighPriorityPackagePath `
+                                         -PolicyPath $HighPriorityPolicyPath `
                                          -Description "ACSC High Priority Windows Hardening Configuration"
         $DeploymentResults += @{ Configuration = "High Priority"; Success = $Result }
     }
     
     "MediumPriority" {
         $Result = Deploy-ACSCConfiguration -ConfigurationName "ACSCMediumPriorityHardening" `
-                                         -PackagePath "./packages/ACSCMediumPriorityHardening.zip" `
-                                         -PolicyPath "./policies/acsc-medium-priority-policy.json" `
+                                         -PackagePath $MediumPriorityPackagePath `
+                                         -PolicyPath $MediumPriorityPolicyPath `
                                          -Description "ACSC Medium Priority Windows Hardening Configuration"
         $DeploymentResults += @{ Configuration = "Medium Priority"; Success = $Result }
     }
     
     "All" {
         $HighResult = Deploy-ACSCConfiguration -ConfigurationName "ACSCHighPriorityHardening" `
-                                             -PackagePath "./packages/ACSCHighPriorityHardening.zip" `
-                                             -PolicyPath "./policies/acsc-high-priority-policy.json" `
+                                             -PackagePath $HighPriorityPackagePath `
+                                             -PolicyPath $HighPriorityPolicyPath `
                                              -Description "ACSC High Priority Windows Hardening Configuration"
         
         $MediumResult = Deploy-ACSCConfiguration -ConfigurationName "ACSCMediumPriorityHardening" `
-                                               -PackagePath "./packages/ACSCMediumPriorityHardening.zip" `
-                                               -PolicyPath "./policies/acsc-medium-priority-policy.json" `
+                                               -PackagePath $MediumPriorityPackagePath `
+                                               -PolicyPath $MediumPriorityPolicyPath `
                                                -Description "ACSC Medium Priority Windows Hardening Configuration"
         
         $DeploymentResults += @{ Configuration = "High Priority"; Success = $HighResult }
         $DeploymentResults += @{ Configuration = "Medium Priority"; Success = $MediumResult }
     }
+}
+
+# Cleanup temporary GitHub downloads
+if ($UseGitHubRelease -and $GitHubDownload.TempDir) {
+    Write-Host "`nCleaning up temporary files..." -ForegroundColor Gray
+    Remove-Item -Path $GitHubDownload.TempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Display deployment summary

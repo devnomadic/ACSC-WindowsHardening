@@ -64,7 +64,6 @@ jobs:
             release/*.zip
             release/*.sha256
             release/*.json
-            release/manifest.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
