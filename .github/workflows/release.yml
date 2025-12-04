@@ -1,0 +1,76 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "push") {
+            $version = "${{ github.ref_name }}".TrimStart('v')
+          } else {
+            $version = "${{ github.event.inputs.version }}"
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Version: $version"
+      
+      - name: Setup PowerShell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          
+          Write-Host "Installing required modules..."
+          $modules = @('GuestConfiguration', 'PSDscResources', 'SecurityPolicyDsc', 'AuditPolicyDsc')
+          foreach ($module in $modules) {
+            Write-Host "Installing $module..."
+            Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck
+          }
+      
+      - name: Build packages
+        shell: pwsh
+        run: |
+          Write-Host "Building release packages..."
+          ./build-release.ps1 -Version "${{ steps.version.outputs.VERSION }}" -UsePowerShell5
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event_name == 'push' && github.ref_name || format('v{0}', github.event.inputs.version) }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: release/RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: |
+            release/*.zip
+            release/*.sha256
+            release/*.json
+            release/manifest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: acsc-hardening-packages-${{ steps.version.outputs.VERSION }}
+          path: release/
+          retention-days: 90

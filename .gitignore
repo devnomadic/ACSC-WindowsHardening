@@ -1,0 +1,75 @@
+# PowerShell
+*.ps1xml
+*.psd1
+*.psm1
+**/bin/
+**/obj/
+
+# Machine Configuration packages
+packages/*.zip
+packages/*.mof
+
+# Azure credentials and secrets
+.azure/
+*.publishsettings
+*.azurepubxml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# Build outputs
+**/target/
+**/build/
+
+# Node.js (if using any Node.js tools)
+node_modules/
+npm-debug.log*
+
+# Python (if using any Python tools)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Configuration files with sensitive data
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
