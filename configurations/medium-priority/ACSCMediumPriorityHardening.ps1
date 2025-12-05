@@ -29,13 +29,22 @@ Configuration ACSCMediumPriorityHardening {
         }
         
         # ================================
-        # ACSC Medium Priority: Account Lockout Policy (September 2025 Update)
+        # ACSC Medium Priority: Account Policies (September 2025 Update)
         # ================================
-        AccountPolicy 'LockoutPolicy' {
-            Name = 'LockoutPolicy'
-            Account_lockout_duration = 0  # 0 = locked until admin unlocks
+        AccountPolicy 'AccountSecurityPolicy' {
+            Name = 'AccountSecurityPolicy'
+            # Account Lockout Policy (ACSC: locked until admin unlocks)
+            Account_lockout_duration = 0  # 0 = must be unlocked by administrator
             Account_lockout_threshold = 5
-            Reset_account_lockout_counter_after = 15  # Changed from 30 to 15 minutes
+            Reset_account_lockout_counter_after = 0  # Must be 0 when duration is 0 (Windows constraint)
+            # Password Policy
+            # Note: Length over complexity - 14 char passwords (DSC max) are stronger than 8 char complex
+            Minimum_Password_Age = 1
+            Maximum_Password_Age = 0  # 0 = passwords never expire (September 2025 change)
+            Minimum_Password_Length = 14  # Maximum supported by AccountPolicy DSC resource
+            Password_must_meet_complexity_requirements = 'Disabled'  # Disabled in favor of length (September 2025 change)
+            Enforce_password_history = 24
+            Store_passwords_using_reversible_encryption = 'Disabled'
         }
 
         # Machine account lockout threshold (September 2025 addition)
@@ -53,20 +62,6 @@ Configuration ACSCMediumPriorityHardening {
             ValueType   = 'DWord'
             ValueData   = '5'
             Force       = $true
-        }
-
-        # ================================
-        # ACSC Medium Priority: Password Policy (September 2025 Update)
-        # Note: Length over complexity - 14 char passwords (DSC max) are stronger than 8 char complex
-        # ================================
-        AccountPolicy 'PasswordPolicy' {
-            Name = 'PasswordPolicy'
-            Minimum_Password_Age = 1
-            Maximum_Password_Age = 0  # 0 = passwords never expire (September 2025 change)
-            Minimum_Password_Length = 14  # Maximum supported by AccountPolicy DSC resource
-            Password_must_meet_complexity_requirements = 'Disabled'  # Disabled in favor of length (September 2025 change)
-            Enforce_password_history = 24
-            Store_passwords_using_reversible_encryption = 'Disabled'
         }
 
         # Modern password policy registry settings (Group Policy preferences)

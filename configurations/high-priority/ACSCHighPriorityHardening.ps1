@@ -31,21 +31,19 @@ Configuration ACSCHighPriorityHardening {
         # ================================
         # ACSC High Priority: Account Policies using SecurityPolicyDsc
         # ================================
-        AccountPolicy 'PasswordPolicy' {
-            Name                        = 'PasswordPolicy'
+        AccountPolicy 'AccountSecurityPolicy' {
+            Name                        = 'AccountSecurityPolicy'
+            # Password Policy
             Enforce_password_history    = 24
             Maximum_password_age        = 60
             Minimum_password_age        = 1
             Minimum_password_length     = 14
             Password_must_meet_complexity_requirements = 'Enabled'
             Store_passwords_using_reversible_encryption = 'Disabled'
-        }
-
-        AccountPolicy 'LockoutPolicy' {
-            Name                          = 'LockoutPolicy'
-            Account_lockout_duration      = 15
-            Account_lockout_threshold     = 5
-            Reset_account_lockout_counter_after = 15
+            # Account Lockout Policy (ACSC: locked until admin unlocks)
+            Account_lockout_duration      = 0  # 0 = must be unlocked by administrator
+            Account_lockout_threshold     = 5  # Lock after 5 failed attempts
+            Reset_account_lockout_counter_after = 0  # Must be 0 when duration is 0 (Windows constraint)
         }
 
         # ================================
