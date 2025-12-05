@@ -7,6 +7,7 @@ Configuration ACSCMediumPriorityHardening {
     Import-DscResource -ModuleName 'PSDscResources'
     Import-DscResource -ModuleName 'SecurityPolicyDsc'
     Import-DscResource -ModuleName 'AuditPolicyDsc'
+    Import-DscResource -ModuleName 'cChoco'
 
     Node $ComputerName {
         
@@ -15,34 +16,16 @@ Configuration ACSCMediumPriorityHardening {
         # ================================
         
         # Ensure Chocolatey is installed
-        Script 'InstallChocolatey' {
-            GetScript = {
-                $chocoInstalled = Test-Path "$env:ProgramData\chocolatey\bin\choco.exe"
-                return @{ Result = $chocoInstalled }
-            }
-            TestScript = {
-                return Test-Path "$env:ProgramData\chocolatey\bin\choco.exe"
-            }
-            SetScript = {
-                [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-                Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-            }
+        cChocoInstaller 'InstallChocolatey' {
+            InstallDir = 'C:\ProgramData\chocolatey'
         }
         
         # Install Windows Security Baseline package
-        Script 'InstallWinSecurityBaseline' {
-            GetScript = {
-                $packageInstalled = & choco list --local-only winsecuritybaseline --exact --limit-output 2>$null
-                return @{ Result = if ($packageInstalled) { 'Installed' } else { 'Not Installed' } }
-            }
-            TestScript = {
-                $packageInstalled = & choco list --local-only winsecuritybaseline --exact --limit-output 2>$null
-                return [bool]$packageInstalled
-            }
-            SetScript = {
-                & choco install winsecuritybaseline -y --no-progress
-            }
-            DependsOn = '[Script]InstallChocolatey'
+        cChocoPackageInstaller 'InstallWinSecurityBaseline' {
+            Name = 'winsecuritybaseline'
+            Ensure = 'Present'
+            AutoUpgrade = $false
+            DependsOn = '[cChocoInstaller]InstallChocolatey'
         }
         
         # ================================

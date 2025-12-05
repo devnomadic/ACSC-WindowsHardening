@@ -66,6 +66,7 @@ $DscModules = @{
     'SecurityPolicyDsc' = $null  # Use latest available
     'AuditPolicyDsc'    = $null  # Use latest
     'PSDscResources'    = $null  # Use latest
+    'cChoco'            = $null  # Use latest
 }
 
 foreach ($ModuleName in $DscModules.Keys) {
@@ -158,7 +159,7 @@ function New-ACSCMachineConfigurationPackage {
         Write-Host "Cleaning up module environment..." -ForegroundColor Yellow
         
         # Remove ALL DSC-related modules from memory
-        $DscModules = @('PSDesiredStateConfiguration', 'SecurityPolicyDsc', 'AuditPolicyDsc', 'PSDscResources')
+        $DscModules = @('PSDesiredStateConfiguration', 'SecurityPolicyDsc', 'AuditPolicyDsc', 'PSDscResources', 'cChoco')
         foreach ($ModuleName in $DscModules) {
             Get-Module -Name $ModuleName | Remove-Module -Force -ErrorAction SilentlyContinue
         }

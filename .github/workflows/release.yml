@@ -40,7 +40,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           
           Write-Host "Installing required modules..."
-          $modules = @('GuestConfiguration', 'PSDscResources', 'SecurityPolicyDsc', 'AuditPolicyDsc')
+          $modules = @('GuestConfiguration', 'PSDscResources', 'SecurityPolicyDsc', 'AuditPolicyDsc', 'cChoco')
           foreach ($module in $modules) {
             Write-Host "Installing $module..."
             Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck

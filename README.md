@@ -224,7 +224,7 @@ Download the release artifacts and deploy to Azure using the provided scripts.
 1. **Install required modules**
    ```powershell
    Install-Module -Name GuestConfiguration, Az.Accounts, Az.Resources, Az.Storage -Force
-   Install-Module -Name SecurityPolicyDsc, AuditPolicyDsc, PSDscResources -Force
+   Install-Module -Name SecurityPolicyDsc, AuditPolicyDsc, PSDscResources, cChoco -Force
    ```
 
 2. **Create packages**

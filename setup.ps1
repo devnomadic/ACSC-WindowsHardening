@@ -90,7 +90,8 @@ if ($InstallModules) {
         'PSDscResources',
         'SecurityPolicyDsc',
         'AuditPolicyDsc',
-        'ComputerManagementDsc'
+        'ComputerManagementDsc',
+        'cChoco'
     )
     
     foreach ($Module in $RequiredModules) {
