@@ -8,6 +8,7 @@ Configuration ACSCMediumPriorityHardening {
     Import-DscResource -ModuleName 'SecurityPolicyDsc'
     Import-DscResource -ModuleName 'AuditPolicyDsc'
     Import-DscResource -ModuleName 'cChoco'
+    Import-DscResource -ModuleName 'xPSDesiredStateConfiguration'
 
     Node $ComputerName {
         
@@ -503,17 +504,17 @@ Configuration ACSCMediumPriorityHardening {
         # ================================
         # ACSC Medium Priority: Windows Features Management
         # ================================
-        WindowsOptionalFeature 'DisableSMB1Protocol' {
+        xWindowsOptionalFeature 'DisableSMB1Protocol' {
             Name   = 'SMB1Protocol'
             Ensure = 'Absent'
         }
 
-        WindowsOptionalFeature 'DisableTelnetClient' {
+        xWindowsOptionalFeature 'DisableTelnetClient' {
             Name   = 'TelnetClient'
             Ensure = 'Absent'
         }
 
-        WindowsOptionalFeature 'DisableTFTPClient' {
+        xWindowsOptionalFeature 'DisableTFTPClient' {
             Name   = 'TFTP'
             Ensure = 'Absent'
         }

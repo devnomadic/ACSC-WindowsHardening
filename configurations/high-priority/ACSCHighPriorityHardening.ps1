@@ -8,6 +8,7 @@ Configuration ACSCHighPriorityHardening {
     Import-DscResource -ModuleName 'SecurityPolicyDsc'
     Import-DscResource -ModuleName 'AuditPolicyDsc'
     Import-DscResource -ModuleName 'cChoco'
+    Import-DscResource -ModuleName 'xPSDesiredStateConfiguration'
 
     Node $ComputerName {
         
@@ -341,7 +342,7 @@ Configuration ACSCHighPriorityHardening {
         # ================================
         # ACSC High Priority: Windows Features using WindowsOptionalFeature
         # ================================
-        WindowsOptionalFeature 'DisableSMB1Protocol' {
+        xWindowsOptionalFeature 'DisableSMB1Protocol' {
             Name   = 'SMB1Protocol'
             Ensure = 'Absent'
         }
@@ -464,7 +465,7 @@ Configuration ACSCHighPriorityHardening {
             Ensure      = 'Present'
             Key         = 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules'
             ValueName   = 'd4f940ab-401b-4efc-aadc-ad5f3c50688a'
-            ValueType   = 'DWord'
+            ValueType   = 'String'
             ValueData   = '1'  # Block all Office applications from creating child processes
             Force       = $true
         }
@@ -473,7 +474,7 @@ Configuration ACSCHighPriorityHardening {
             Ensure      = 'Present'
             Key         = 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules'
             ValueName   = '9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2'
-            ValueType   = 'DWord'
+            ValueType   = 'String'
             ValueData   = '1'  # Block credential stealing from LSASS
             Force       = $true
         }
@@ -482,7 +483,7 @@ Configuration ACSCHighPriorityHardening {
             Ensure      = 'Present'
             Key         = 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules'
             ValueName   = 'be9ba2d9-53ea-4cdc-84e5-9b1eeee46550'
-            ValueType   = 'DWord'
+            ValueType   = 'String'
             ValueData   = '1'  # Block executable content from email client and webmail
             Force       = $true
         }
@@ -491,7 +492,7 @@ Configuration ACSCHighPriorityHardening {
             Ensure      = 'Present'
             Key         = 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules'
             ValueName   = 'd3e037e1-3eb8-44c8-a917-57927947596d'
-            ValueType   = 'DWord'
+            ValueType   = 'String'
             ValueData   = '1'  # Block JavaScript or VBScript from launching downloaded executable content
             Force       = $true
         }
@@ -500,7 +501,7 @@ Configuration ACSCHighPriorityHardening {
             Ensure      = 'Present'
             Key         = 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules'
             ValueName   = 'c1db55ab-c21a-4637-bb3f-a12568109d35'
-            ValueType   = 'DWord'
+            ValueType   = 'String'
             ValueData   = '1'  # Use advanced protection against ransomware
             Force       = $true
         }

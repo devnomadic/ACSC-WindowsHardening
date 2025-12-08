@@ -91,7 +91,8 @@ if ($InstallModules) {
         'SecurityPolicyDsc',
         'AuditPolicyDsc',
         'ComputerManagementDsc',
-        'cChoco'
+        'cChoco',
+        'xPSDesiredStateConfiguration'
     )
     
     foreach ($Module in $RequiredModules) {

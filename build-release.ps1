@@ -35,7 +35,8 @@ $RequiredModules = @(
     @{ Name = 'PSDscResources'; MinVersion = '2.12.0' },
     @{ Name = 'SecurityPolicyDsc'; MinVersion = '2.10.0' },
     @{ Name = 'AuditPolicyDsc'; MinVersion = '1.4.0' },
-    @{ Name = 'cChoco'; MinVersion = '2.6.0' }
+    @{ Name = 'cChoco'; MinVersion = '2.6.0' },
+    @{ Name = 'xPSDesiredStateConfiguration'; MinVersion = '9.1.0' }
 )
 
 foreach ($Module in $RequiredModules) {
