@@ -504,19 +504,49 @@ Configuration ACSCMediumPriorityHardening {
         # ================================
         # ACSC Medium Priority: Windows Features Management
         # ================================
-        xWindowsOptionalFeature 'DisableSMB1Protocol' {
-            Name   = 'SMB1Protocol'
-            Ensure = 'Absent'
+        Script 'DisableSMB1Protocol' {
+            GetScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -ErrorAction SilentlyContinue
+                return @{ Result = if ($Feature) { $Feature.State } else { 'NotPresent' } }
+            }
+            TestScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -ErrorAction SilentlyContinue
+                if (-not $Feature) { return $true }
+                return ($Feature.State -eq 'Disabled' -or $Feature.State -eq 'DisabledWithPayloadRemoved')
+            }
+            SetScript = {
+                Disable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -NoRestart -ErrorAction Stop
+            }
         }
 
-        xWindowsOptionalFeature 'DisableTelnetClient' {
-            Name   = 'TelnetClient'
-            Ensure = 'Absent'
+        Script 'DisableTelnetClient' {
+            GetScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'TelnetClient' -ErrorAction SilentlyContinue
+                return @{ Result = if ($Feature) { $Feature.State } else { 'NotPresent' } }
+            }
+            TestScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'TelnetClient' -ErrorAction SilentlyContinue
+                if (-not $Feature) { return $true }
+                return ($Feature.State -eq 'Disabled' -or $Feature.State -eq 'DisabledWithPayloadRemoved')
+            }
+            SetScript = {
+                Disable-WindowsOptionalFeature -Online -FeatureName 'TelnetClient' -NoRestart -ErrorAction Stop
+            }
         }
 
-        xWindowsOptionalFeature 'DisableTFTPClient' {
-            Name   = 'TFTP'
-            Ensure = 'Absent'
+        Script 'DisableTFTPClient' {
+            GetScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'TFTP' -ErrorAction SilentlyContinue
+                return @{ Result = if ($Feature) { $Feature.State } else { 'NotPresent' } }
+            }
+            TestScript = {
+                $Feature = Get-WindowsOptionalFeature -Online -FeatureName 'TFTP' -ErrorAction SilentlyContinue
+                if (-not $Feature) { return $true }
+                return ($Feature.State -eq 'Disabled' -or $Feature.State -eq 'DisabledWithPayloadRemoved')
+            }
+            SetScript = {
+                Disable-WindowsOptionalFeature -Online -FeatureName 'TFTP' -NoRestart -ErrorAction Stop
+            }
         }
 
         # ================================
