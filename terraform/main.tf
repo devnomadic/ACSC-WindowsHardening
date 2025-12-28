@@ -55,6 +55,19 @@ locals {
 
   deploy_high_priority   = var.configuration_level == "HighPriority" || var.configuration_level == "All"
   deploy_medium_priority = var.configuration_level == "MediumPriority" || var.configuration_level == "All"
+
+  # Validate that required assets were found
+  validate_high_assets = local.deploy_high_priority && (
+    local.high_priority_package.url == "" ||
+    local.high_priority_hash.url == "" ||
+    local.high_priority_policy.url == ""
+  ) ? tobool("Error: High Priority assets not found in GitHub release. Ensure the release contains ACSCHighPriorityHardening package files.") : true
+
+  validate_medium_assets = local.deploy_medium_priority && (
+    local.medium_priority_package.url == "" ||
+    local.medium_priority_hash.url == "" ||
+    local.medium_priority_policy.url == ""
+  ) ? tobool("Error: Medium Priority assets not found in GitHub release. Ensure the release contains ACSCMediumPriorityHardening package files.") : true
 }
 
 # Download package files
@@ -119,6 +132,9 @@ resource "azurerm_storage_container" "acsc" {
 }
 
 # Upload High Priority package
+# Note: Using source_content loads the ZIP file into Terraform state.
+# For very large packages (>100MB), consider using a separate deployment script
+# or Azure CLI commands instead. Current ACSC packages are typically <10MB.
 resource "azurerm_storage_blob" "high_priority_package" {
   count                  = local.deploy_high_priority ? 1 : 0
   name                   = "ACSCHighPriorityHardening.zip"
@@ -129,6 +145,9 @@ resource "azurerm_storage_blob" "high_priority_package" {
 }
 
 # Upload Medium Priority package
+# Note: Using source_content loads the ZIP file into Terraform state.
+# For very large packages (>100MB), consider using a separate deployment script
+# or Azure CLI commands instead. Current ACSC packages are typically <10MB.
 resource "azurerm_storage_blob" "medium_priority_package" {
   count                  = local.deploy_medium_priority ? 1 : 0
   name                   = "ACSCMediumPriorityHardening.zip"
@@ -180,7 +199,17 @@ locals {
   high_priority_content_uri   = local.deploy_high_priority ? "${azurerm_storage_blob.high_priority_package[0].url}${data.azurerm_storage_account_blob_container_sas.high_priority[0].sas}" : ""
   medium_priority_content_uri = local.deploy_medium_priority ? "${azurerm_storage_blob.medium_priority_package[0].url}${data.azurerm_storage_account_blob_container_sas.medium_priority[0].sas}" : ""
 
-  # Extract SHA256 hash from downloaded hash file (format: "HASH  FILENAME")
-  high_priority_content_hash   = local.deploy_high_priority ? trimspace(split(" ", data.http.high_priority_hash[0].response_body)[0]) : ""
-  medium_priority_content_hash = local.deploy_medium_priority ? trimspace(split(" ", data.http.medium_priority_hash[0].response_body)[0]) : ""
+  # Extract SHA256 hash from downloaded hash file (format: "HASH  FILENAME" or "HASH")
+  # Split on whitespace and take the first element which should be the hash
+  high_priority_content_hash = local.deploy_high_priority ? (
+    length(split(" ", data.http.high_priority_hash[0].response_body)) > 0 ?
+    trimspace(split(" ", data.http.high_priority_hash[0].response_body)[0]) :
+    trimspace(data.http.high_priority_hash[0].response_body)
+  ) : ""
+
+  medium_priority_content_hash = local.deploy_medium_priority ? (
+    length(split(" ", data.http.medium_priority_hash[0].response_body)) > 0 ?
+    trimspace(split(" ", data.http.medium_priority_hash[0].response_body)[0]) :
+    trimspace(data.http.medium_priority_hash[0].response_body)
+  ) : ""
 }
