@@ -37,13 +37,21 @@ locals {
     asset.name => asset.browser_download_url
   }
 
-  # Identify specific assets
-  high_priority_package   = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCHighPriorityHardening.*\\.zip$", name)) && !can(regex("\\.sha256$", name))][0]
-  medium_priority_package = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCMediumPriorityHardening.*\\.zip$", name)) && !can(regex("\\.sha256$", name))][0]
-  high_priority_hash      = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCHighPriorityHardening.*\\.zip\\.sha256$", name))][0]
-  medium_priority_hash    = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCMediumPriorityHardening.*\\.zip\\.sha256$", name))][0]
-  high_priority_policy    = [for name, url in local.assets : { name = name, url = url } if name == "acsc-high-priority-policy.json"][0]
-  medium_priority_policy  = [for name, url in local.assets : { name = name, url = url } if name == "acsc-medium-priority-policy.json"][0]
+  # Identify specific assets with error handling
+  high_priority_package_list   = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCHighPriorityHardening.*\\.zip$", name)) && !can(regex("\\.sha256$", name))]
+  medium_priority_package_list = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCMediumPriorityHardening.*\\.zip$", name)) && !can(regex("\\.sha256$", name))]
+  high_priority_hash_list      = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCHighPriorityHardening.*\\.zip\\.sha256$", name))]
+  medium_priority_hash_list    = [for name, url in local.assets : { name = name, url = url } if can(regex("ACSCMediumPriorityHardening.*\\.zip\\.sha256$", name))]
+  high_priority_policy_list    = [for name, url in local.assets : { name = name, url = url } if name == "acsc-high-priority-policy.json"]
+  medium_priority_policy_list  = [for name, url in local.assets : { name = name, url = url } if name == "acsc-medium-priority-policy.json"]
+
+  # Extract first element safely
+  high_priority_package   = length(local.high_priority_package_list) > 0 ? local.high_priority_package_list[0] : { name = "", url = "" }
+  medium_priority_package = length(local.medium_priority_package_list) > 0 ? local.medium_priority_package_list[0] : { name = "", url = "" }
+  high_priority_hash      = length(local.high_priority_hash_list) > 0 ? local.high_priority_hash_list[0] : { name = "", url = "" }
+  medium_priority_hash    = length(local.medium_priority_hash_list) > 0 ? local.medium_priority_hash_list[0] : { name = "", url = "" }
+  high_priority_policy    = length(local.high_priority_policy_list) > 0 ? local.high_priority_policy_list[0] : { name = "", url = "" }
+  medium_priority_policy  = length(local.medium_priority_policy_list) > 0 ? local.medium_priority_policy_list[0] : { name = "", url = "" }
 
   deploy_high_priority   = var.configuration_level == "HighPriority" || var.configuration_level == "All"
   deploy_medium_priority = var.configuration_level == "MediumPriority" || var.configuration_level == "All"

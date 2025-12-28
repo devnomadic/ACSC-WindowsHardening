@@ -24,13 +24,13 @@ output "medium_priority_package_url" {
 }
 
 output "high_priority_content_uri" {
-  description = "SAS token URI for High Priority package (valid for 2 years)"
+  description = "SAS token URI for High Priority package (expires based on sas_token_expiry_years variable)"
   value       = local.deploy_high_priority ? local.high_priority_content_uri : null
   sensitive   = true
 }
 
 output "medium_priority_content_uri" {
-  description = "SAS token URI for Medium Priority package (valid for 2 years)"
+  description = "SAS token URI for Medium Priority package (expires based on sas_token_expiry_years variable)"
   value       = local.deploy_medium_priority ? local.medium_priority_content_uri : null
   sensitive   = true
 }
