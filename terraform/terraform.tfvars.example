@@ -1,0 +1,28 @@
+# Azure Subscription Configuration
+subscription_id      = "your-subscription-id-here"
+resource_group_name  = "rg-acsc-hardening"
+location             = "Australia East"
+
+# Storage Account Configuration
+# Must be globally unique, 3-24 characters, lowercase letters and numbers only
+storage_account_name = "stacschardening"
+container_name       = "acsc-machine-configuration"
+
+# GitHub Release Configuration
+github_repo     = "devnomadic/ACSC-WindowsHardening"
+release_version = ""  # Leave empty for latest release, or specify like "v1.0.0"
+
+# Deployment Configuration
+configuration_level = "All"  # Options: HighPriority, MediumPriority, All
+assignment_type     = "ApplyAndAutoCorrect"  # Options: ApplyAndMonitor, ApplyAndAutoCorrect
+
+# SAS Token Configuration
+sas_token_expiry_years = 2
+
+# Resource Tags
+tags = {
+  Environment = "Production"
+  ManagedBy   = "Terraform"
+  Purpose     = "ACSC-Windows-Hardening"
+  CostCenter  = "Security"
+}
