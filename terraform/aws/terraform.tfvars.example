@@ -1,0 +1,37 @@
+# AWS Region Configuration
+region = "ap-southeast-2" # Sydney
+
+# S3 Bucket Configuration
+# Must be globally unique, 3-63 characters, lowercase letters, numbers, and hyphens
+s3_bucket_name = "acsc-hardening-packages"
+
+# GitHub Release Configuration
+github_repo     = "devnomadic/ACSC-WindowsHardening"
+release_version = "" # Leave empty for latest release, or specify like "v1.0.0"
+
+# Deployment Configuration
+configuration_level = "All" # Options: HighPriority, MediumPriority, All
+
+# Remediation Schedule
+# How often State Manager checks and applies configuration
+remediation_schedule = "rate(30 minutes)" # Every 30 minutes
+
+# EC2 Instance Targeting
+# Only EC2 instances with this tag will receive the hardening configuration
+target_tag_key   = "ACSC-Hardening"
+target_tag_value = "Enabled"
+
+# S3 Configuration
+enable_versioning  = true
+enable_encryption  = true
+
+# Pre-signed URL Configuration
+presigned_url_expiry_hours = 17520 # 2 years (730 days * 24 hours)
+
+# Resource Tags
+tags = {
+  Environment = "Production"
+  ManagedBy   = "Terraform"
+  Purpose     = "ACSC-Windows-Hardening"
+  CostCenter  = "Security"
+}

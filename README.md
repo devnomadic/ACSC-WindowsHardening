@@ -209,20 +209,28 @@ terraform plan
 terraform apply
 ```
 
-**AWS Deployment (Coming Soon):**
+**AWS Deployment:**
 ```bash
 cd terraform/aws
-# See terraform/aws/README.md for upcoming implementation
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your AWS configuration
+
+terraform init
+terraform plan
+terraform apply
+
+# Tag EC2 instances to receive hardening
+aws ec2 create-tags --resources i-INSTANCE-ID --tags Key=ACSC-Hardening,Value=Enabled
 ```
 
 See [terraform/README.md](terraform/README.md) for detailed documentation on both modules.
 
-The Terraform module automatically:
-- Downloads packages from GitHub releases
-- Creates storage account and uploads packages
-- Generates SAS tokens
-- Creates and assigns Azure Policies
-- Configures managed identities and roles
+The Terraform modules automatically:
+- Download packages from GitHub releases
+- Create storage (Azure Storage Account / S3 Bucket) and upload packages
+- Generate secure access tokens/permissions
+- Create and configure policies/associations
+- Set up managed identities and roles
 
 See [terraform/README.md](terraform/README.md) for detailed documentation.
 

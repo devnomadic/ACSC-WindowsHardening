@@ -35,14 +35,27 @@ The AWS module deploys ACSC hardening policies using AWS Systems Manager and rel
 
 **Location:** [`aws/`](aws/)
 
-**Status:** 🚧 Coming Soon
+**Status:** ✅ Available
 
-**Planned Features:**
-- S3 bucket for DSC MOF packages
-- AWS Systems Manager State Manager associations
-- AWS Config Rules for compliance monitoring
-- IAM roles and policies for EC2 instances
+**Features:**
+- S3 bucket for DSC MOF packages with encryption and versioning
+- Automatic GitHub release integration
+- SSM Documents for DSC configuration application
+- State Manager associations for automated remediation
+- IAM roles and instance profiles for EC2 instances
 - Support for both High and Medium priority configurations
+
+**Quick Start:**
+```bash
+cd aws
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your AWS configuration
+terraform init
+terraform plan
+terraform apply
+```
+
+See [aws/README.md](aws/README.md) for detailed documentation.
 
 ## Module Comparison
 
@@ -50,10 +63,11 @@ The AWS module deploys ACSC hardening policies using AWS Systems Manager and rel
 |---------|-------------|------------|
 | Storage | Azure Storage Account | S3 Bucket |
 | Configuration Management | Azure Machine Configuration | Systems Manager State Manager |
-| Compliance/Policy | Azure Policy | AWS Config Rules |
+| Compliance/Policy | Azure Policy | Systems Manager Compliance |
 | Authentication | Managed Identity | IAM Instance Profile |
-| Package Distribution | SAS Token URLs | Pre-signed URLs |
+| Package Distribution | SAS Token URLs | S3 Direct Access |
 | Auto-remediation | ApplyAndAutoCorrect mode | State Manager associations |
+| Extension Auto-install | Yes | No (SSM Agent required) |
 
 ## Prerequisites
 
@@ -66,6 +80,7 @@ The AWS module deploys ACSC hardening policies using AWS Systems Manager and rel
 - Terraform >= 1.0
 - AWS CLI or IAM credentials
 - AWS account with appropriate permissions
+- Windows EC2 instances with SSM Agent installed
 - EC2 instances with SSM Agent installed
 
 ## Contributing
