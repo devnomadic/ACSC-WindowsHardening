@@ -60,13 +60,17 @@ This project implements security configurations based on the [ACSC Hardening Mic
 ├── scripts/                    # Deployment and utility scripts
 │   ├── Deploy-ACSCToAzure.ps1
 │   └── New-ACSCMachineConfigurationPackage.ps1
-├── terraform/                  # Terraform deployment module
-│   ├── main.tf                 # Main Terraform configuration
-│   ├── variables.tf            # Input variables
-│   ├── outputs.tf              # Output values
-│   ├── policy.tf               # Policy definitions and assignments
-│   ├── terraform.tfvars.example # Example configuration
-│   └── README.md               # Terraform documentation
+├── terraform/                  # Terraform deployment modules
+│   ├── azure/                  # Azure-specific module
+│   │   ├── main.tf             # Main Terraform configuration
+│   │   ├── variables.tf        # Input variables
+│   │   ├── outputs.tf          # Output values
+│   │   ├── policy.tf           # Policy definitions and assignments
+│   │   ├── terraform.tfvars.example # Example configuration
+│   │   └── README.md           # Azure module documentation
+│   ├── aws/                    # AWS-specific module (coming soon)
+│   │   └── README.md           # AWS module documentation
+│   └── README.md               # Terraform modules overview
 ├── build-release.ps1           # Automated build script
 └── docs/                       # Documentation
 ```
@@ -194,8 +198,9 @@ flowchart TD
 
 The easiest way to deploy is using the Terraform module, which automates the entire process:
 
+**Azure Deployment:**
 ```bash
-cd terraform
+cd terraform/azure
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with your Azure subscription details
 
@@ -203,6 +208,14 @@ terraform init
 terraform plan
 terraform apply
 ```
+
+**AWS Deployment (Coming Soon):**
+```bash
+cd terraform/aws
+# See terraform/aws/README.md for upcoming implementation
+```
+
+See [terraform/README.md](terraform/README.md) for detailed documentation on both modules.
 
 The Terraform module automatically:
 - Downloads packages from GitHub releases
