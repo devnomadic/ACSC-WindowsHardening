@@ -60,6 +60,17 @@ This project implements security configurations based on the [ACSC Hardening Mic
 ├── scripts/                    # Deployment and utility scripts
 │   ├── Deploy-ACSCToAzure.ps1
 │   └── New-ACSCMachineConfigurationPackage.ps1
+├── terraform/                  # Terraform deployment modules
+│   ├── azure/                  # Azure-specific module
+│   │   ├── main.tf             # Main Terraform configuration
+│   │   ├── variables.tf        # Input variables
+│   │   ├── outputs.tf          # Output values
+│   │   ├── policy.tf           # Policy definitions and assignments
+│   │   ├── terraform.tfvars.example # Example configuration
+│   │   └── README.md           # Azure module documentation
+│   ├── aws/                    # AWS-specific module (coming soon)
+│   │   └── README.md           # AWS module documentation
+│   └── README.md               # Terraform modules overview
 ├── build-release.ps1           # Automated build script
 └── docs/                       # Documentation
 ```
@@ -183,29 +194,67 @@ flowchart TD
 
 ## Quick Start
 
-### Option 1: Automated Build via GitHub Actions (Recommended)
+### Option 1: Terraform Deployment (Recommended)
 
-The repository includes a GitHub Actions workflow for automated builds:
+The easiest way to deploy is using the Terraform module, which automates the entire process:
 
+**Azure Deployment:**
 ```bash
-# Tag a release version
-git tag v1.0.0
-git push origin v1.0.0
+cd terraform/azure
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your Azure subscription details
 
-# GitHub Actions will automatically:
-# - Compile DSC configurations
-# - Create Machine Configuration packages
-# - Generate SHA256 hashes
-# - Create a GitHub Release with all artifacts
+terraform init
+terraform plan
+terraform apply
 ```
 
-Download the release artifacts and deploy to Azure using the provided scripts.
+**AWS Deployment:**
+```bash
+cd terraform/aws
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your AWS configuration
 
-### Option 2: Local Build
+terraform init
+terraform plan
+terraform apply
+
+# Tag EC2 instances to receive hardening
+aws ec2 create-tags --resources i-INSTANCE-ID --tags Key=ACSC-Hardening,Value=Enabled
+```
+
+See [terraform/README.md](terraform/README.md) for detailed documentation on both modules.
+
+The Terraform modules automatically:
+- Download packages from GitHub releases
+- Create storage (Azure Storage Account / S3 Bucket) and upload packages
+- Generate secure access tokens/permissions
+- Create and configure policies/associations
+- Set up managed identities and roles
+
+See [terraform/README.md](terraform/README.md) for detailed documentation.
+
+### Option 2: PowerShell Deployment with GitHub Release
+
+Deploy using the PowerShell script with automatic GitHub release download:
+
+```powershell
+.\scripts\Deploy-ACSCToAzure.ps1 `
+    -SubscriptionId "your-subscription-id" `
+    -ResourceGroupName "your-resource-group" `
+    -StorageAccountName "yourstorageaccount" `
+    -UseGitHubRelease
+```
+
+### Option 3: Local Build and Deploy
 
 1. **Build packages locally**
-   ```powershell
-   # Creates packages in ./release directory
+   ```bash
+   # Tag a release version
+   git tag v1.0.0
+   git push origin v1.0.0
+   
+   # Or build locally
    .\build-release.ps1 -Version "1.0.0"
    ```
 
@@ -219,7 +268,7 @@ Download the release artifacts and deploy to Azure using the provided scripts.
 
 3. **Monitor compliance** in Azure Policy dashboard (20-30 minutes for initial evaluation)
 
-### Option 3: Manual Setup
+### Option 4: Manual Setup
 
 1. **Install required modules**
    ```powershell
